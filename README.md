@@ -14,7 +14,7 @@ Any questions, requests, or bug reporting, please contact me at chenye.xu@nyu.ed
 (on energon2)
 
 ```
-git clone git@github.com:etytan/evasion.git
+git clone git@github.com:mipademiao/hps-evasionArchitecture.git
 cd evasion
 module load java-1.8
 mvn clean package
@@ -22,7 +22,7 @@ mvn clean package
 
 (locally)
 ```
-git clone git@github.com:etytan/evasion.git
+git clone git@github.com:mipademiao/hps-evasionArchitecture.git
 cd evasion
 mvn clean package
 ```
