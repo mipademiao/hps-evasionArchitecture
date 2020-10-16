@@ -1,0 +1,235 @@
+<html>
+	<header>
+		<title>Evasion</title>
+	</header>
+	<body>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+
+		<canvas id="canvas" width="302" height="302">
+                  Your browser does not support the HTML5 canvas tag.
+        </canvas><br /><br />
+
+		<span id="hunter-name" style="color:darkred;"></span> vs <span id="prey-name" style="color:darkgreen;"></span><br />
+		<br />
+		Tick number: <span id="tick"></span><br />
+		Time left: <span id="hunter-tl" style="color:darkred;"></span> <span id="prey-tl" style="color:darkgreen;"></span><br />
+		<br />
+		Active game results:<br />
+		<span id="results1"></span><br />
+		<span id="results2"></span><br />
+		<br />
+		Active set results: <span id="final-result"></span><br />
+		<br />
+		<br />
+		<a href="javascript:;" id="live">Live</a> <a href="javascript:;" id="play">Play</a> <a href="javascript:;" id="pause">Pause</a> &nbsp;&nbsp;&nbsp; <a href="javascript:;" id="x1">x1.0</a> <a href="javascript:;" id="x2">x2.0</a> <a href="javascript:;" id="x4">x4.0</a> <a href="javascript:;" id="x8">x8.0</a><br />
+		<br />
+		Previous games:<br />
+		<div id="games"></div>
+
+
+        <script type="text/javascript">
+
+            var socket = io("127.0.0.1:" + location.port);
+
+            var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+
+            var obj = {};
+            obj.state = "";
+            obj.hunter = "";
+            obj.prey = "";
+            obj.results = [];
+            obj.finalresult = "";
+
+            paint(obj);
+
+            var live = true;
+            var playing = false;
+            var snapshots = [];
+            var playhead = 0;
+            var lastplayhead = 0;
+            var speed = 1;
+
+            var games = [];
+
+            $("#live").click(function(){
+				live = true;
+	            playing = false;
+            });
+
+            $("#play").click(function(){
+	            live = false;
+	            playing = true;
+            });
+
+            $("#pause").click(function(){
+	            live = false;
+	            playing = false;
+            });
+
+            $("#x1").click(function(){
+	            speed = 1;
+            });
+
+            $("#x2").click(function(){
+	            speed = 2;
+            });
+
+            $("#x4").click(function(){
+	            speed = 4;
+            });
+
+            $("#x8").click(function(){
+	            speed = 8;
+            });
+
+            function paint(obj){
+	            $("#hunter-name").text(obj.hunter);
+	            $("#prey-name").text(obj.prey);
+	            if (obj.results.length > 0) {
+		            $("#results1").text(obj.results[0]);
+	            } else {
+		            $("#results1").text("");
+	            }
+	            if (obj.results.length > 1) {
+		            $("#results2").text(obj.results[1]);
+	            } else {
+		            $("#results2").text("");
+	            }
+	            $("#final-result").text(obj.finalresult);
+	            if (obj.state != "") {
+		            var data = obj.state;
+
+		            $("#tick").text(data[3]);
+
+		            $("#hunter-tl").text(data[0]/1000.0);
+		            $("#prey-tl").text(data[1]/1000.0);
+
+		            ctx.fillStyle = "white";
+		            ctx.fillRect(0, 0, 303, 303);
+
+		            ctx.translate(0.5, 0.5);
+
+		            ctx.lineCap = "square";
+
+		            ctx.fillStyle = "black";
+		            ctx.beginPath();
+		            ctx.moveTo(0, 0);
+		            ctx.lineTo(301, 0);
+		            ctx.lineTo(301, 301);
+		            ctx.lineTo(0, 301);
+		            ctx.lineTo(0, 0);
+		            ctx.stroke();
+
+		            ctx.fillStyle = "red";
+		            ctx.fillRect(data[9], data[10], 3, 3);
+
+		            ctx.fillStyle = "green";
+		            ctx.fillRect(data[13], data[14], 3, 3);
+
+                    var pos = 16;
+		            for (var i = 0; i < data[15]; i++) {
+			            //var type = data[16 + i * 4];
+                        var type = data[pos++];
+			            if (type == 0) {
+				            var y = data[pos++] + 1;
+				            var x0 = data[pos++] + 1;
+				            var x1 = data[pos++] + 1;
+
+				            ctx.fillStyle = "black";
+				            ctx.beginPath();
+				            ctx.moveTo(x0, y);
+				            ctx.lineTo(x1, y);
+				            ctx.stroke();
+			            } else if (type == 1) {
+				            var x = data[pos++] + 1;
+				            var y0 = data[pos++] + 1;
+				            var y1 = data[pos++] + 1;
+
+				            ctx.fillStyle = "black";
+				            ctx.beginPath();
+				            ctx.moveTo(x, y0);
+				            ctx.lineTo(x, y1);
+				            ctx.stroke();
+			            }
+                        else if (type == 2 || type == 3) {
+                            var x0 = data[pos++] + 1;
+                            var x1 = data[pos++] + 1;
+                            var y0 = data[pos++] + 1;
+                            var y1 = data[pos++] + 1;
+                            pos++;
+                            
+                            ctx.fillStyle = "black";
+                            ctx.beginPath();
+                            ctx.moveTo(x0, y0);
+                            ctx.lineTo(x1, y1);
+                            ctx.stroke();
+                        }
+		            }
+		            ctx.translate(-0.5, -0.5);
+	            }
+            }
+
+            setInterval(function(){
+	            if(live) {
+		            playhead = snapshots.length - 1;
+	            } else if(playing){
+		            var forced = false;
+		            if(playhead < snapshots.length - 1) {
+			            for (var current = playhead + 1; current <= Math.min(playhead + speed, snapshots.length - 1); current++) {
+				            if (snapshots[current].state[3] == 0) {
+								playhead = current;
+					            playing = false;
+					            live = false;
+					            forced = true;
+					            break;
+				            }
+			            }
+		            }
+		            if(!forced) {
+			            playhead = Math.min(playhead + speed, snapshots.length - 1);
+		            }
+	            }
+				if (playhead != lastplayhead){
+					lastplayhead = playhead;
+					paint(snapshots[playhead]);
+				}
+            }, 1000/60);
+
+			socket.on('to_client', function(input)
+			{
+				var dataStrs = input.state.split(" ");
+				input.state = dataStrs.map(function (string) {
+					return parseInt(string)
+				});
+				snapshots.push(input);
+
+				if(input.state[3] == 0) {
+					var game = {};
+					game.name = input.hunter + " vs " + input.prey;
+					game.playhead = snapshots.length - 1;
+					games.push(game);
+
+					var txt = "";
+					$("#games").empty();
+					for(var i = games.length-1; i >= 0;i--) {
+						$('<a>').text(games[i].name).attr("href", "javascript:;").click(function(index) {
+							return function (e) {
+								playhead = games[index].playhead;
+								playing = false;
+								live = false;
+							}
+						}(i)).appendTo($("#games"));
+						$('<br>').appendTo($("#games"));
+					}
+				}
+			});
+
+        </script>
+
+
+	</body>
+</html>
