@@ -9,36 +9,15 @@ Any questions, requests, or bug reporting, please contact me at chenye.xu@nyu.ed
 * Apache Maven
 * Node.js (optional, client-side, for display) Tested on v5.5.0
 
-# Clone and build
-
-(on energon2)
-
+# Clone and buil
 ```
 git clone git@github.com:mipademiao/hps-evasionArchitecture.git
-cd evasion
-module load java-1.8
-mvn clean package
-```
-
-(locally)
-```
-git clone git@github.com:mipademiao/hps-evasionArchitecture.git
-cd evasion
+cd hps-evasionArchitecture
 mvn clean package
 ```
 
 
 # Run
-
-(on energon2)
-
-```
-module load java-1.8
-java -jar ./target/evasion-1.0-SNAPSHOT.jar [player 1 port] [player 2 port] [max walls] [wall placement delay] ([display host] [display port])
-```
-
-(locally)
-
 ```
 java -jar ./target/evasion-1.0-SNAPSHOT.jar [player 1 port] [player 2 port] [max walls] [wall placement delay] ([display host] [display port])
 ```
@@ -193,7 +172,7 @@ Specifically, this [helpful reference](http://www.roguebasin.com/index.php?title
 
 To enable the display, on your local machine, first run `node web.js [display port] [local webserver port]`, and go to `localhost:[local webserver port]` in your browser. You'll be accessing the port given by `[local webserver port]` locally, but if using energon you'll need a connection from energon to your local port given by `[display port]`, so router/firewall port forwarding for that port might be required. The `[display port]` is where the application sends the data to node.js. The `[local webserver port]` is where node.js sends the data to browser.
 
-Now run the main java jar (on energon2 or locally), supplying the display host and display port parameters as listed in the run instructions above. If running locally, host should be "localhost". If running on energon, it should be the ip address of your local machine. (You can try using 'python display/getLocalIp.py' but if that fails any "what is my ip" web service should suffice.) The display port should match what you supplied to the node server.
+Now run the main java jar, supplying the display host and display port parameters as listed in the run instructions above. If running locally, host should be "localhost". If running on energon, it should be the ip address of your local machine. (You can try using 'python display/getLocalIp.py' but if that fails any "what is my ip" web service should suffice.) The display port should match what you supplied to the node server.
 
 From this point everything should just work. You should not need to reset your browser tab or the node server -- not even in between restarts of the java jar.
 
