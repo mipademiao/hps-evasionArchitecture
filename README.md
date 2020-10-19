@@ -9,7 +9,7 @@ Any questions, requests, or bug reporting, please contact me at chenye.xu@nyu.ed
 * Apache Maven
 * Node.js (optional, client-side, for display) Tested on v5.5.0
 
-# Clone and buil
+# Clone and build
 ```
 git clone git@github.com:mipademiao/hps-evasionArchitecture.git
 cd hps-evasionArchitecture
